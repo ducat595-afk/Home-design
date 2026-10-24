@@ -1,18 +1,83 @@
 <!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>Home Design | Private Gallery</title>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>HOME DESIGN | Photo Gallery</title>
 <style>
-:root{color-scheme:dark;font-family:system-ui,-apple-system,sans-serif}body{margin:0;background:#0d1522;color:#f3f6fa}header{padding:25px 5%;border-bottom:1px solid #344052;display:flex;justify-content:space-between;align-items:center}h1{font-size:1.3rem;letter-spacing:.1em}main{max-width:1100px;margin:auto;padding:24px}input,button{font:inherit;padding:12px;border-radius:10px;border:1px solid #63748c}input{background:#1c2a3b;color:white;max-width:100%}button{background:#d3b78c;color:#18202a;cursor:pointer;font-weight:700}button.secondary{background:#27374a;color:white}.hidden{display:none!important}#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;margin-top:24px}.tile{border:0;background:#1b2839;padding:0;overflow:hidden;aspect-ratio:1;cursor:pointer}.tile img{width:100%;height:100%;object-fit:cover}#viewer{position:fixed;inset:0;background:#000e;display:grid;place-items:center;padding:12px;z-index:10}#viewer img{max-width:95vw;max-height:85vh;object-fit:contain}#viewer button{position:absolute;right:16px;top:16px}#status{min-height:24px;color:#efc98d}#admin{margin-top:20px}input[type=file]{max-width:90%}
-</style></head><body><header><h1>HOME DESIGN <small>PHOTO GALLERY</small></h1><button id="logout" class="secondary hidden">ログアウト</button></header>
-<main><section id="login"><h2>共有アルバム</h2><p>共有パスワードを入力してください。</p><form id="loginForm"><input id="password" type="password" autocomplete="current-password" placeholder="共有パスワード" required><button>写真を見る</button></form><p>管理者は管理用パスワードでログインしてください。</p></section>
-<section id="gallery" class="hidden"><h2>写真一覧</h2><button id="reload" class="secondary">更新</button><div id="admin" class="hidden"><input id="photos" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple><button id="upload">アップロード</button><p>管理者は写真を選んでアップロードできます。削除は写真を長押しせず、各写真の削除ボタンから行えます。</p></div><div id="grid"></div></section><p id="status" role="status"></p></main>
-<div id="viewer" class="hidden"><button id="close">閉じる</button><img id="large" alt="写真"></div><script src="config.js"></script><script>
-const $=id=>document.getElementById(id);let token="",admin=false;
-const endpoint=window.GALLERY_CONFIG?.functionUrl||"";
-function message(s){$("status").textContent=s}
-async function api(action,body={},method="POST"){if(!endpoint.startsWith("https://")||endpoint.includes("YOUR_PROJECT_REF"))throw Error("Supabase URLが未設定です");let r;try{r=await fetch(endpoint+"/"+action,{method,headers:{"Content-Type":"application/json",...(token?{"Authorization":"Bearer "+token}:{})},body:JSON.stringify(body)});}catch(e){throw Error("通信に失敗しました（CORSまたはネットワーク）。アクセス元: "+location.origin+" / API: "+new URL(endpoint).origin+" / 詳細: "+(e instanceof Error?e.message:String(e))+"。SupabaseのALLOWED_ORIGINと関数のOPTIONS応答を確認してください。")}const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"通信エラー "+r.status);return d}
-$("loginForm").onsubmit=async e=>{e.preventDefault();try{message("認証中…");const d=await api("login",{password:$("password").value});token=d.token;admin=!!d.admin;$("password").value="";$("login").classList.add("hidden");$("gallery").classList.remove("hidden");$("logout").classList.remove("hidden");$("admin").classList.toggle("hidden",!admin);await load()}catch(e){message(e.message)}};
-$("logout").onclick=()=>{token="";admin=false;$("gallery").classList.add("hidden");$("login").classList.remove("hidden");$("logout").classList.add("hidden");$("grid").replaceChildren();message("ログアウトしました")};
-async function load(){try{message("写真を読み込み中…");const d=await api("list");$("grid").replaceChildren();for(const p of d.photos){const wrap=document.createElement("div");const b=document.createElement("button");b.className="tile";const im=document.createElement("img");im.src=p.url;im.loading="lazy";im.alt="共有写真";b.append(im);b.onclick=()=>{$("large").src=p.url;$("viewer").classList.remove("hidden")};wrap.append(b);if(admin){const del=document.createElement("button");del.textContent="削除";del.className="secondary";del.onclick=async()=>{if(!confirm("この写真を削除しますか？"))return;try{await api("delete",{path:p.path});await load()}catch(e){message(e.message)}};wrap.append(del)}$("grid").append(wrap)}message(d.photos.length+"枚の写真")}catch(e){message(e.message)}}
-$("reload").onclick=load;$("close").onclick=()=>{$("viewer").classList.add("hidden");$("large").removeAttribute("src")};
-$("upload").onclick=async()=>{const files=Array.from($("photos").files);if(!files.length)return message("写真を選択してください");for(const f of files){try{if(f.size>8*1024*1024)throw Error("8MBを超える写真はアップロードできません");const buf=await f.arrayBuffer();const bytes=new Uint8Array(buf);let binary="";for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));await api("upload",{name:f.name,type:f.type,data:btoa(binary)});message(f.name+" を保存しました")}catch(e){message(f.name+": "+e.message);return}}$("photos").value="";await load()};
-</script></body></html>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",system-ui,sans-serif;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:#0b121e;color:#f4f2ed;min-height:100vh}
+header{padding:22px max(20px,5vw);border-bottom:1px solid #263447;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.logo{font-size:clamp(17px,3.8vw,25px);letter-spacing:.15em;font-weight:700}
+main{max-width:1150px;margin:auto;padding:36px 20px 70px}
+h1{font-size:clamp(24px,5vw,36px);margin:0 0 12px}p{line-height:1.8;color:#b7c2d0}
+.panel{max-width:520px;margin:10vh auto 0;padding:30px;border:1px solid #344254;border-radius:20px;background:#142133}
+form{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+input{flex:1;min-width:150px;background:#202e41;color:white;border:1px solid #66788c;border-radius:10px;padding:14px;font:inherit}
+button{font:inherit;border:0;border-radius:10px;padding:12px 19px;background:#d6b988;color:#172333;font-weight:700;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid #fff;outline-offset:3px}
+button.secondary{background:#27384d;color:white}
+.hidden{display:none!important}
+.topline{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:14px;margin-top:25px}
+.photo{padding:0;background:#1c2a3a;aspect-ratio:1;overflow:hidden;border-radius:12px;display:block;width:100%}
+.photo img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .2s}
+.photo:active img{transform:scale(1.04)}
+#status{margin-top:16px;min-height:24px}
+#viewer{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.97);display:flex;align-items:center;justify-content:center;padding:60px 10px 24px}
+#viewer img{max-width:100%;max-height:calc(100dvh - 90px);object-fit:contain}
+#close{position:absolute;right:16px;top:16px;border-radius:100px}
+#counter{position:absolute;left:18px;top:23px;color:#fff;font-size:14px}
+.nav{position:absolute;top:50%;transform:translateY(-50%);background:#ffffff33;color:white;padding:14px}
+#prev{left:8px}#next{right:8px}
+@media(min-width:700px){#grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}}
+</style>
+</head>
+<body>
+<header><div class="logo">HOME DESIGN <span style="font-weight:400;font-size:.6em">PHOTO GALLERY</span></div><button id="logout" class="secondary hidden">ログアウト</button></header>
+<main>
+<section id="login" class="panel">
+<h1>共有アルバム</h1><p>パスワードを入力すると写真を表示します。</p>
+<form id="loginForm"><input id="password" type="password" placeholder="パスワード" autocomplete="current-password" required><button type="submit">写真を見る</button></form>
+<p id="loginError" role="alert" style="color:#f3b4a6"></p>
+</section>
+<section id="gallery" class="hidden">
+<div class="topline"><div><h1>写真一覧</h1><p>写真をタップすると拡大表示できます。</p></div><button id="reload" class="secondary">更新</button></div>
+<p id="status" role="status"></p><div id="grid"></div>
+</section>
+</main>
+<div id="viewer" class="hidden" role="dialog" aria-modal="true" aria-label="写真を拡大表示">
+<span id="counter"></span><button id="close" class="secondary" aria-label="閉じる">× 閉じる</button>
+<button id="prev" class="nav" aria-label="前の写真">‹</button><img id="large" alt="拡大写真"><button id="next" class="nav" aria-label="次の写真">›</button>
+</div>
+<script>
+"use strict";
+// This is a visual gate only. Photos in a public GitHub repository are PUBLIC.
+const PASSWORD_SHA256="e83d594711fee89151ea8f6fdf91f700e95dafbb5665c0c91d9d89fbb3516143";
+const REPO="ducat595-afk/Home-design";
+const $=id=>document.getElementById(id);
+let photos=[],current=0;
+async function digest(s){const bytes=new TextEncoder().encode(s);const hash=await crypto.subtle.digest("SHA-256",bytes);return Array.from(new Uint8Array(hash),b=>b.toString(16).padStart(2,"0")).join("")}
+function showGallery(){ $("login").classList.add("hidden");$("gallery").classList.remove("hidden");$("logout").classList.remove("hidden");loadPhotos()}
+$("loginForm").addEventListener("submit",async e=>{e.preventDefault();$("loginError").textContent="";const pass=$("password").value;const valid=(await digest(pass))===PASSWORD_SHA256;$("password").value="";if(!valid){$("loginError").textContent="パスワードが違います。";return}sessionStorage.setItem("homeGalleryAccess","yes");showGallery()});
+$("logout").onclick=()=>{sessionStorage.removeItem("homeGalleryAccess");photos=[];$("grid").replaceChildren();closeViewer();$("gallery").classList.add("hidden");$("logout").classList.add("hidden");$("login").classList.remove("hidden")};
+async function loadPhotos(){
+ $("status").textContent="写真を読み込んでいます…";$("grid").replaceChildren();
+ try{
+  const res=await fetch("https://api.github.com/repos/"+REPO+"/contents/photos?ref=main",{headers:{Accept:"application/vnd.github+json"},cache:"no-store"});
+  if(res.status===404){$("status").textContent="まだ写真がありません。GitHubのphotosフォルダーに画像を追加してください。";return}
+  if(!res.ok)throw new Error("写真一覧の取得に失敗しました ("+res.status+")");
+  const files=await res.json();
+  photos=files.filter(f=>f.type==="file" && /\.(jpe?g|png|webp|gif|avif)$/i.test(f.name)).sort((a,b)=>a.name.localeCompare(b.name,"ja")).map(f=>({url:f.download_url,name:f.name}));
+  $("status").textContent=photos.length?photos.length+"枚の写真":"まだ写真がありません。GitHubのphotosフォルダーに画像を追加してください。";
+  for(let i=0;i<photos.length;i++){const p=photos[i],btn=document.createElement("button"),img=document.createElement("img");btn.className="photo";btn.type="button";btn.setAttribute("aria-label",p.name+"を拡大");img.src=p.url;img.alt=p.name;img.loading="lazy";btn.append(img);btn.onclick=()=>openViewer(i);$("grid").append(btn)}
+ }catch(e){$("status").textContent="写真を読み込めませんでした。少し待ってから「更新」を押してください。"}
+}
+function openViewer(i){if(!photos.length)return;current=(i+photos.length)%photos.length;$("large").src=photos[current].url;$("large").alt=photos[current].name;$("counter").textContent=(current+1)+" / "+photos.length;$("viewer").classList.remove("hidden");document.body.style.overflow="hidden"}
+function closeViewer(){$("viewer").classList.add("hidden");$("large").removeAttribute("src");document.body.style.overflow=""}
+$("close").onclick=closeViewer;$("prev").onclick=()=>openViewer(current-1);$("next").onclick=()=>openViewer(current+1);$("reload").onclick=loadPhotos;
+$("viewer").onclick=e=>{if(e.target===$("viewer"))closeViewer()};
+document.addEventListener("keydown",e=>{if($("viewer").classList.contains("hidden"))return;if(e.key==="Escape")closeViewer();if(e.key==="ArrowLeft")openViewer(current-1);if(e.key==="ArrowRight")openViewer(current+1)});
+if(sessionStorage.getItem("homeGalleryAccess")==="yes")showGallery();
+</script>
+</body></html>
