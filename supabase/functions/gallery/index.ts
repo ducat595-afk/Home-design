@@ -8,8 +8,13 @@ async function mac(value:string){const key=await crypto.subtle.importKey("raw",e
 async function equal(a:string,b:string){const x=encoder.encode(a),y=encoder.encode(b);const h=await crypto.subtle.digest("SHA-256",x);const j=await crypto.subtle.digest("SHA-256",y);return new Uint8Array(h).every((v,i)=>v===new Uint8Array(j)[i])&&x.length===y.length}
 async function authorize(req:Request){const raw=(req.headers.get("authorization")||"").replace(/^Bearer /,"");const parts=raw.split(".");if(parts.length!==2||!(await equal(await mac(parts[0]),parts[1])))throw Error("Unauthorized");const payload=JSON.parse(new TextDecoder().decode(un64(parts[0])));if(payload.exp<Date.now()||!["viewer","admin"].includes(payload.role))throw Error("Session expired");return payload.role as string}
 Deno.serve(async req=>{
-const allowed=secret("ALLOWED_ORIGIN");const origin=req.headers.get("origin")||"";if(origin!==allowed)return json({error:"Origin not allowed"},403,allowed);
-if(req.method==="OPTIONS")return json({},200,allowed);
+const configured=secret("ALLOWED_ORIGIN").trim().replace(/\\/$/,"");
+const origin=req.headers.get("origin")||"";
+const allowed=origin===configured;
+// Browsers send OPTIONS preflight before the password request. Respond with
+// CORS headers for the configured site; never disclose credentials here.
+if(req.method==="OPTIONS")return json(allowed?{}:{error:"Origin not allowed"},allowed?200:403,allowed?origin:configured);
+if(!allowed)return json({error:"Origin not allowed"},403,configured);
 if(req.method!=="POST")return json({error:"Method not allowed"},405,allowed);
 const action=new URL(req.url).pathname.split("/").pop();let body:any;
 try{body=await req.json();if(!body||typeof body!=="object")throw Error("Invalid JSON")}catch{return json({error:"Invalid JSON"},400,allowed)}
