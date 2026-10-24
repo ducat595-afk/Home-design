@@ -42,7 +42,7 @@ button.secondary{background:#27384d;color:white}
 <p id="loginError" role="alert" style="color:#f3b4a6"></p>
 </section>
 <section id="gallery" class="hidden">
-<div class="topline"><div><h1>写真一覧</h1><p>写真をタップすると拡大表示できます。</p></div><div style="display:flex;gap:10px;flex-wrap:wrap"><button id="addPhotos" type="button">＋ 写真を追加</button><button id="reload" class="secondary">更新</button></div></div>
+<div class="topline"><div><h1>写真一覧</h1><p>写真をタップすると拡大表示できます。</p></div><div style="display:flex;gap:10px;flex-wrap:wrap"><button id="reload" class="secondary">更新</button></div></div>
 <p id="status" role="status"></p><div id="grid"></div>
 </section>
 </main>
@@ -75,7 +75,6 @@ async function loadPhotos(){
 }
 function openViewer(i){if(!photos.length)return;current=(i+photos.length)%photos.length;$("large").src=photos[current].url;$("large").alt=photos[current].name;$("counter").textContent=(current+1)+" / "+photos.length;$("viewer").classList.remove("hidden");document.body.style.overflow="hidden"}
 function closeViewer(){$("viewer").classList.add("hidden");$("large").removeAttribute("src");document.body.style.overflow=""}
-$("addPhotos").onclick=()=>{window.open("https://github.com/ducat595-afk/Home-design/upload/main/photos","_blank","noopener,noreferrer")};
 $("close").onclick=closeViewer;$("prev").onclick=()=>openViewer(current-1);$("next").onclick=()=>openViewer(current+1);$("reload").onclick=loadPhotos;
 $("viewer").onclick=e=>{if(e.target===$("viewer"))closeViewer()};
 document.addEventListener("keydown",e=>{if($("viewer").classList.contains("hidden"))return;if(e.key==="Escape")closeViewer();if(e.key==="ArrowLeft")openViewer(current-1);if(e.key==="ArrowRight")openViewer(current+1)});
