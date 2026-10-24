@@ -1,0 +1,19 @@
+# Never commit photos or local secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.heic
+*.heif
+*.avif
+*.gif
+photos/
+secrets/
+supabase/.temp/
